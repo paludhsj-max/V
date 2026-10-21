@@ -1,22 +1,24 @@
 # Stremio Hentai Hub
 
-Stremio addon with four providers: HentaiGasm, HentaiSmile, HentaiCity, and HentaiMama. Hanime and Hentai.TV are omitted because their catalogs were returning no items.
+Stremio addon with five active sources: HentaiMama, Hentaigasm, HentaiSmile, HStream, and Iwara Community. HentaiCity is removed. Hanime and Hentai.TV remain omitted.
 
-## Changes in v2.5.4
+## Changes in v2.5.5
 
-- HentaiSmile stream discovery is now bound to the selected catalog video's numeric ID across both `/videos/<id>/` and `/embed/<id>/` pages, including when an embed page leads to another player. It extracts player configuration scoped to the matching ID rather than crawling every URL on the page, which could mix in recommendation/ad videos.
-- When a player script contains multiple video objects, fallback extraction scans only the object containing the selected ID and its source properties.
-- HentaiSmile catalog titles are checked against the URL slug to avoid borrowing the neighboring card's title; placeholder titles fall back to the slug.
-- HentaiSmile stream names show the source hostname and duplicate entries from the same host are collapsed.
-- Hentaigasm's known-working resolver path is preserved. Existing HentaiCity and HentaiMama resolver logic is unchanged in this patch.
-- Hanime and Hentai.TV remain removed.
+- Removed HentaiCity from the active provider registry and manifest.
+- Added HStream. Its player is resolved server-side; the addon lists only media sources actually exposed by the player. Some videos offer 720p, 1080p, 1440p (2K), or 2160p (4K); the available options vary by video.
+- Added Iwara Community for user-uploaded animation. Its catalog uses Iwara's `ecchi` rating where the API provides it, and stream choices are taken from the source variants returned by Iwara. Quality labels are not fabricated.
+- Both new providers return direct media streams to Stremio. There is no “open in browser” stream fallback.
+- Existing provider genre lists and the shared catalog genre list are unchanged. HStream and Iwara do not show a provider-specific genre selector because the addon does not map the existing genre list to their real tags. The existing HentaiMama poster behavior in genre catalogs remains unchanged.
+- Existing HentaiMama, Hentaigasm, and HentaiSmile resolution logic is retained.
 
 ## Deploy
 
-1. Replace `index.js`, `package.json`, `test.js`, and `README.md` in the repository with the files from the patch ZIP.
+1. Replace the addon's files with the files from this ZIP.
 2. Push the changes and let the host reinstall dependencies and redeploy.
-3. Install the deployment's public HTTPS URL ending in `/manifest.json` in Stremio. A `127.0.0.1` URL in server logs is internal to the server.
-4. Check deployment logs if a catalog or stream still fails.
+3. Install the deployment's public HTTPS URL ending in `/manifest.json` in Stremio.
+4. Check deployment logs if a catalog or stream returns empty.
+
+Chromium dependencies are now included for server-side extraction and Iwara's API fallback. Playback still happens in Stremio from API/player media URLs; the addon's browser is used only by the server to discover those URLs.
 
 ## Tests
 
@@ -27,8 +29,8 @@ npm test
 npm start
 ```
 
-Tests cover provider manifest, catalog pagination, route normalization, HentaiMama player parsing, and HentaiSmile player-ID matching, stream labeling, and title matching. The local environment does not have full npm dependencies, so parser tests that require real Cheerio could not be run there. Dependency-independent tests and mocked resolver checks were run. Live playback must still be verified on the deployed host because the build environment could not fetch provider video endpoints.
+Tests cover the provider manifest, quality-label handling, Iwara URL/variant parsing, catalog pagination, route normalization, HentaiMama player parsing, and HentaiSmile player-ID matching, stream labeling, and title matching. Live playback was not testable from the offline build environment; actual resolution availability depends on each provider's source response.
 
 ## Environment variables
 
-`PORT`, `USER_AGENT`, `HTTP_TIMEOUT_MS`, `CACHE_CATALOG_SECONDS`, `CACHE_DETAIL_SECONDS`, `CACHE_STREAM_SECONDS`, `EMBED_DEPTH`, `EMBED_PAGE_LIMIT`, `HENTAIMAMA_BASE`, `HENTAIGASM_BASE`, `HENTAISMILE_BASE`, and `HENTAICITY_BASE`.
+`PORT`, `USER_AGENT`, `HTTP_TIMEOUT_MS`, `CACHE_CATALOG_SECONDS`, `CACHE_DETAIL_SECONDS`, `CACHE_STREAM_SECONDS`, `EMBED_DEPTH`, `EMBED_PAGE_LIMIT`, `HENTAIMAMA_BASE`, `HENTAIGASM_BASE`, `HENTAISMILE_BASE`, `HSTREAM_BASE`, `IWARA_API_BASE`, and optional `CHROME_PATH`.
